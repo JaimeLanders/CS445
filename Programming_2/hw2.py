@@ -30,14 +30,46 @@ def main():
     σclass0 = np.zeros(NFEATURES)
     σclass1 = np.zeros(NFEATURES)
 
-    μclass1 = np.mean(train[:907, :NFEATURES], axis=0, dtype=np.float64)
-    μclass0 = np.mean(train[907:, :NFEATURES], axis=0, dtype=np.float64)
-    σclass1 = np.std(train[:907, :NFEATURES], axis=0, dtype=np.float64)
-    σclass0 = np.std(train[907:, :NFEATURES], axis=0, dtype=np.float64)
+    μclass0 = np.mean(train[:907, :NFEATURES], axis=0, dtype=np.float64)
+    μclass1 = np.mean(train[907:, :NFEATURES], axis=0, dtype=np.float64)
+    σclass0 = np.std(train[:907, :NFEATURES], axis=0, dtype=np.float64)
+    σclass1 = np.std(train[907:, :NFEATURES], axis=0, dtype=np.float64)
 
-    σclass1 = np.where(σclass1[:NFEATURES] == 0, MINSTD, σclass1)
     σclass0 = np.where(σclass0[:NFEATURES] == 0, MINSTD, σclass0)
+    σclass1 = np.where(σclass1[:NFEATURES] == 0, MINSTD, σclass1)
 
+    #    print("p0 = ", p0)
+    #    print("p1 = ", p1)
+    #    print("p = ", p0 + p1)
+
+    # 3. Run Bayesian learning model
+    tclass = np.zeros((test.shape[0], NFEATURES, 2))
+    aclass = np.ones((test.shape[0], 2))
+    aclass[:, 0] *= math.log2(pclass0)
+    aclass[:, 1] *= math.log2(pclass1)
+
+    for j in range(test.shape[0]):
+        for i in range(NFEATURES):
+            tclass[j, i, 0] = ndist(test[j, i], μclass0[i], σclass0[i])
+            tclass[j, i, 1] = ndist(test[j, i], μclass1[i], σclass1[i])
+#            aclass[j, 0] += math.log2(tclass[j, i, 0])
+            aclass[j, 0] += tclass[j, i, 0]
+#            aclass[j, 1] += math.log2(tclass[j, i, 1])
+            aclass[j, 1] += tclass[j, i, 1]
+
+    fclass = np.zeros((test.shape[0]))
+    for i in range(test.shape[0]):
+        if aclass[j, 0] > aclass[j, 1]:
+            fclass[0] = 1
+        else:
+            fclass[0] = 0
+
+    accuracy = np.sum(fclass) / np.sum(test[:, NFEATURES])
+
+    print("accuracy = ", accuracy)
+
+
+def example():
     extrain = np.array([[3.0, 5.1, 1.0],
                        [4.1, 6.3, 1.0],
                        [7.2, 9.8, 1.0],
@@ -67,14 +99,6 @@ def main():
     else:
         print("Example class = 0")
 
-    print()
-
-#    print("p0 = ", p0)
-#    print("p1 = ", p1)
-#    print("p = ", p0 + p1)
-
-    # 3. Run Bayesian learning model
-
 
 def initData(infile):
     data = np.loadtxt(infile, delimiter=',')
@@ -99,7 +123,8 @@ def initData(infile):
 
 
 def ndist(x, μ, σ):
-    return (1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) / (2 * pow(σ, 2))))
+#    return (1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) / (2 * pow(σ, 2))))
+    return math.log2((1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) / (2 * pow(σ, 2)))))
 
 
 if __name__ == '__main__':
