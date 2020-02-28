@@ -21,9 +21,6 @@ def main():
     class1 = np.sum(train[:, NFEATURES], axis=0, dtype=np.float64)
     pclass0 = (train.shape[0] - class1)/train.shape[0]
     pclass1 = class1/train.shape[0]
-#    print("pclass0 = ", pclass0)
-#    print("pclass1 = ", pclass1)
-#    print("ptotal = ", pclass0 + pclass1)
 
     μclass0 = np.zeros(NFEATURES)
     μclass1 = np.zeros(NFEATURES)
@@ -37,10 +34,6 @@ def main():
 
     σclass0 = np.where(σclass0[:NFEATURES] == 0, MINSTD, σclass0)
     σclass1 = np.where(σclass1[:NFEATURES] == 0, MINSTD, σclass1)
-
-    #    print("p0 = ", p0)
-    #    print("p1 = ", p1)
-    #    print("p = ", p0 + p1)
 
     # 3. Run Bayesian learning model
     tclass = np.zeros((test.shape[0], NFEATURES, 2))
@@ -102,20 +95,12 @@ def initData(infile):
     data = np.loadtxt(infile, delimiter=',')
     spam = data[:1813]
 #    np.random.shuffle(spam)
-#    print("spam = ",  spam)
-#    print("spam shape =", spam.shape)
     nspam = data[1813:]
 #    np.random.shuffle(nspam)
-#    print("nspam = ",  nspam)
-#    print("nspam shape =", nspam.shape)
     train = spam[:int(spam.shape[0] / 2) + 1, :]
     train = np.append(train, nspam[:int(nspam.shape[0] / 2), :], axis=0)
-#    print("train = ", train)
-#    print("train shape = ", train.shape)
     test = spam[int(spam.shape[0] / 2) + 1:, :]
     test = np.append(test, nspam[int(nspam.shape[0] / 2):, :], axis=0)
-#    print("test = ", test)
-#    print("test shape = ", test.shape)
 
     return train, test
 
