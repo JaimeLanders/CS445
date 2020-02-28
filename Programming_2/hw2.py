@@ -52,10 +52,8 @@ def main():
         for i in range(NFEATURES):
             tclass[j, i, 0] = ndist(test[j, i], μclass0[i], σclass0[i])
             tclass[j, i, 1] = ndist(test[j, i], μclass1[i], σclass1[i])
-#            aclass[j, 0] += math.log2(tclass[j, i, 0])
-            aclass[j, 0] += tclass[j, i, 0]
-#            aclass[j, 1] += math.log2(tclass[j, i, 1])
-            aclass[j, 1] += tclass[j, i, 1]
+            aclass[j, 0] += math.log2(tclass[j, i, 0])
+            aclass[j, 1] += math.log2(tclass[j, i, 1])
 
     fclass = np.zeros((test.shape[0]))
     for i in range(test.shape[0]):
@@ -123,9 +121,9 @@ def initData(infile):
 
 
 def ndist(x, μ, σ):
-#    return (1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) / (2 * pow(σ, 2))))
-    return math.log2((1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) / (2 * pow(σ, 2)))))
+    return (1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) / (2 * pow(σ, 2))))
 
 
 if __name__ == '__main__':
     main()
+#    example()
