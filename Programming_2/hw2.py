@@ -1,7 +1,6 @@
 import numpy as np
 import math
 
-LABELPOS = 57
 MINSTD = 0.0001
 NFEATURES = 57
 
