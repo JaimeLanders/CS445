@@ -14,37 +14,33 @@ def main():
     train, test = initData(infile)
 
     # 2. Create probabalistic model
-#    p1 = np.sum(train[LABELPOS])
-    pclass0 = 0
-    pclass1 = 0
+    p = [0, 0]
 
     class1 = np.sum(train[:, NFEATURES], axis=0, dtype=np.float64)
-    pclass0 = (train.shape[0] - class1)/train.shape[0]
-    pclass1 = class1/train.shape[0]
+    p[0] = (train.shape[0] - class1)/train.shape[0]
+    p[1] = class1/train.shape[0]
 
-    μclass0 = np.zeros(NFEATURES)
-    μclass1 = np.zeros(NFEATURES)
-    σclass0 = np.zeros(NFEATURES)
-    σclass1 = np.zeros(NFEATURES)
+    μ = np.zeros((NFEATURES, 2))
+    σ = np.zeros((NFEATURES, 2))
 
-    μclass0 = np.mean(train[:907, :NFEATURES], axis=0, dtype=np.float64)
-    μclass1 = np.mean(train[907:, :NFEATURES], axis=0, dtype=np.float64)
-    σclass0 = np.std(train[:907, :NFEATURES], axis=0, dtype=np.float64)
-    σclass1 = np.std(train[907:, :NFEATURES], axis=0, dtype=np.float64)
+    μ[:, 0] = np.mean(train[:907, :NFEATURES], axis=0, dtype=np.float64)
+    μ[:, 1] = np.mean(train[907:, :NFEATURES], axis=0, dtype=np.float64)
+    σ[:, 0] = np.std(train[:907, :NFEATURES], axis=0, dtype=np.float64)
+    σ[:, 1] = np.std(train[907:, :NFEATURES], axis=0, dtype=np.float64)
 
-    σclass0 = np.where(σclass0[:NFEATURES] == 0, MINSTD, σclass0)
-    σclass1 = np.where(σclass1[:NFEATURES] == 0, MINSTD, σclass1)
+    σ[:, 0] = np.where(σ[:NFEATURES, 0] == 0, MINSTD, σ[:, 0])
+    σ[:, 1] = np.where(σ[:NFEATURES, 1] == 0, MINSTD, σ[:, 1])
 
     # 3. Run Bayesian learning model
     tclass = np.zeros((test.shape[0], NFEATURES, 2))
     aclass = np.ones((test.shape[0], 2))
-    aclass[:, 0] *= math.log2(pclass0)
-    aclass[:, 1] *= math.log2(pclass1)
+    aclass[:, 0] *= math.log2(p[0])
+    aclass[:, 1] *= math.log2(p[1])
 
     for j in range(test.shape[0]):
         for i in range(NFEATURES):
-            tclass[j, i, 0] = ndist(test[j, i], μclass0[i], σclass0[i])
-            tclass[j, i, 1] = ndist(test[j, i], μclass1[i], σclass1[i])
+            tclass[j, i, 0] = ndist(test[j, i], μ[i, 0], σ[i, 0])
+            tclass[j, i, 1] = ndist(test[j, i], μ[i, 1], σ[i, 1])
             aclass[j, 0] += math.log2(tclass[j, i, 0])
             aclass[j, 1] += math.log2(tclass[j, i, 1])
 
@@ -94,9 +90,7 @@ def example():
 def initData(infile):
     data = np.loadtxt(infile, delimiter=',')
     spam = data[:1813]
-#    np.random.shuffle(spam)
     nspam = data[1813:]
-#    np.random.shuffle(nspam)
     train = spam[:int(spam.shape[0] / 2) + 1, :]
     train = np.append(train, nspam[:int(nspam.shape[0] / 2), :], axis=0)
     test = spam[int(spam.shape[0] / 2) + 1:, :]
