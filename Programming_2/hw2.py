@@ -19,14 +19,25 @@ def main():
     aclass = nblm(train, p, μ, σ)
     fclass = classify(aclass)
 
-    match = 0
-
-    for i in range(fclass.size - 1):
-        if fclass[i] == test[i, NFEATURES]:
-            match += 1
-
-    accuracy = match / fclass.size
+    # Compute accuracy
+    accuracy = compacc(test, fclass)
     print("accuracy = ", accuracy)
+
+    # Output confusion matrix
+    outfile = 'confmat.csv'
+    confmat = getconfmat(train[:, NFEATURES], fclass, outfile)
+
+    tp = confmat[1, 1]
+    fp = confmat[0, 1]
+    fn = confmat[1, 0]
+
+    # Compute precision
+    precision = tp / (tp + fp)
+    print("precision = ", precision)
+
+    # Compute recall
+    recall = tp / (tp + fn)
+    print("recall = ", recall)
 
     return 0
 
@@ -39,6 +50,18 @@ def classify(aclass):
         else:
             fclass[i] = 1
     return fclass
+
+
+def compacc(test, fclass):
+    match = 0
+    for i in range(fclass.size - 1):
+        if fclass[i] == test[i, NFEATURES]:
+            match += 1
+
+    accuracy = match / fclass.size
+
+    return accuracy
+
 
 
 def example():
@@ -71,6 +94,36 @@ def example():
         print("Example class = 1")
     else:
         print("Example class = 0")
+
+
+def getconfmat(ntlabels, ys, fname):
+    """Computes and outputs the classification confusion matrix.
+    Performs the calculations needed to output a csv format confusion matrix containing the values representing the
+    ratio of predicted and output classifications.
+
+    Arguments:
+        ntlabels: An array of integer values containing the labels/target classifications for each data set.
+        ys: An array of integer values containing the predicted classification for each data set.
+        fname: String used to save the csv file to.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+
+    # Confusion matrix
+    confmat = np.zeros((2, 2))
+    for i in range(ntlabels.size):
+        l = int(ntlabels[i])
+        y = int(ys[i])
+        confmat[l, y] += 1
+
+    confmatfile = f'''{fname}.csv'''
+    np.savetxt(confmatfile, confmat, delimiter=',')
+
+    return confmat
 
 
 def initData(infile):
