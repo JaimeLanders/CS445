@@ -17,21 +17,27 @@ def main():
 
     # 3. Run Bayesian learning model
     aclass = nblm(train, p, μ, σ)
-    fclass = classify(test, aclass)
+    fclass = classify(aclass)
 
-    accuracy = np.sum(fclass) / np.sum(test[:, NFEATURES])
+    match = 0
+
+    for i in range(fclass.size - 1):
+        if fclass[i] == test[i, NFEATURES]:
+            match += 1
+
+    accuracy = match / fclass.size
     print("accuracy = ", accuracy)
 
     return 0
 
 
-def classify(test, aclass):
-    fclass = np.zeros((test.shape[0]))
-    for i in range(test.shape[0]):
+def classify(aclass):
+    fclass = np.zeros((aclass.shape[0]))
+    for i in range(aclass.shape[0]):
         if aclass[i, 0] > aclass[i, 1]:
-            fclass[0] = 1
+            fclass[i] = 0
         else:
-            fclass[0] = 0
+            fclass[i] = 1
     return fclass
 
 
@@ -43,22 +49,23 @@ def example():
                        [4.1, 2.0, -1.0],
                        [8.1, 9.4, -1.0]])
 
-    pexclass1 = 0.5
-    pexclass0 = 0.5
-    μexclass1 = np.mean(extrain[:3, :2], axis=0, dtype=np.float64)
-    μexclass0 = np.mean(extrain[3:, :2], axis=0, dtype=np.float64)
-    σexclass1 = np.std(extrain[:3, :2], axis=0, dtype=np.float64)
-    σexclass0 = np.std(extrain[3:, :2], axis=0, dtype=np.float64)
+    p = [0.5, 0.5]
+    μ = np.zeros((6, 2))
+    σ = np.zeros((6, 2))
+    μ[0] = np.mean(extrain[3:, :2], axis=0, dtype=np.float64)
+    μ[1] = np.mean(extrain[:3, :2], axis=0, dtype=np.float64)
+    σ[0] = np.std(extrain[3:, :2], axis=0, dtype=np.float64)
+    σ[1] = np.std(extrain[:3, :2], axis=0, dtype=np.float64)
 
     extest = np.array([5.2, 6.3])
     exclass = np.zeros((2, 2))
 
     for i in range(extest.size):
-        exclass[i, 0] = ndist(extest[i], μexclass1[i], σexclass1[i])
-        exclass[i, 1] = ndist(extest[i], μexclass0[i], σexclass0[i])
+        exclass[i, 0] = ndist(extest[i], μ[i, 0], σ[i, 0])
+        exclass[i, 1] = ndist(extest[i], μ[i, 1], σ[i, 1])
 
-    posex = pexclass1 * exclass[0, 0] * exclass[1, 0]
-    negex = pexclass0 * exclass[0, 1] * exclass[1, 1]
+    posex = p[1] * exclass[0, 0] * exclass[1, 0]
+    negex = p[0] * exclass[0, 1] * exclass[1, 1]
 
     if posex > negex:
         print("Example class = 1")
@@ -95,7 +102,12 @@ def nblm(test, p, μ, σ):
 
 
 def ndist(x, μ, σ):
-    return (1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) / (2 * pow(σ, 2))))
+    n = (1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) / (2 * pow(σ, 2))))
+
+    if n == 0:
+        return 0.0000001
+    else:
+        return n
 
 
 def probmodel(train):
@@ -108,10 +120,10 @@ def probmodel(train):
     μ = np.zeros((NFEATURES, 2))
     σ = np.zeros((NFEATURES, 2))
 
-    μ[:, 0] = np.mean(train[:907, :NFEATURES], axis=0, dtype=np.float64)
-    μ[:, 1] = np.mean(train[907:, :NFEATURES], axis=0, dtype=np.float64)
-    σ[:, 0] = np.std(train[:907, :NFEATURES], axis=0, dtype=np.float64)
-    σ[:, 1] = np.std(train[907:, :NFEATURES], axis=0, dtype=np.float64)
+    μ[:, 0] = np.mean(train[907:, :NFEATURES], axis=0, dtype=np.float64)
+    μ[:, 1] = np.mean(train[:907, :NFEATURES], axis=0, dtype=np.float64)
+    σ[:, 0] = np.std(train[907:, :NFEATURES], axis=0, dtype=np.float64)
+    σ[:, 1] = np.std(train[:907, :NFEATURES], axis=0, dtype=np.float64)
 
     σ[:, 0] = np.where(σ[:NFEATURES, 0] == 0, MINSTD, σ[:, 0])
     σ[:, 1] = np.where(σ[:NFEATURES, 1] == 0, MINSTD, σ[:, 1])
