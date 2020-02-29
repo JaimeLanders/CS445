@@ -6,30 +6,49 @@ NFEATURES = 57
 
 
 def main():
+    """Main entry point for running naive Bayes' model on the UCI Spambase data.
+
+    Calls functions used to create and initialize train and test data, create
+     probablistic model from train data, run naive Bayesian model on test data,
+      and output/compute confusion matrix, accuracy, precision and accuracy.
+
+    Params:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     print("Welcome to Programming #2")
 
     # 1. Create training and test set
+    print("Creating train and test data sets...")
     infile = 'spambase_data.csv'
     train, test = initData(infile)
 
-    # 2. Create probabalistic model
+    # 2. Create probabilistic model
+    print("Creating probabilistic model from training data...")
     p, μ, σ = probmodel(train)
 
     # 3. Run Bayesian learning model
+    print("Running naive Bayesian learning model on test data...\n")
     aclass = nblm(train, p, μ, σ)
     fclass = classify(aclass)
-
-    # Compute accuracy
-    accuracy = compacc(test, fclass)
-    print("accuracy = ", accuracy)
 
     # Output confusion matrix
     outfile = 'confmat.csv'
     confmat = getconfmat(train[:, NFEATURES], fclass, outfile)
 
+    tn = confmat[0, 0]
     tp = confmat[1, 1]
-    fp = confmat[0, 1]
     fn = confmat[1, 0]
+    fp = confmat[0, 1]
+
+    # Compute accuracy
+    accuracy = (tp + tn) / (tn + tp + fn + fp)
+    print("accuracy = ", accuracy)
 
     # Compute precision
     precision = tp / (tp + fp)
@@ -43,6 +62,23 @@ def main():
 
 
 def classify(aclass):
+    """Classifies test data using argmax(P(x_i | class))
+
+    Uses passed in array of classifications for each training example given the
+     probabilities given a class and returns the computed classification using
+     the argmax of the two possible classifications (0, 1).
+
+    Params:
+       aclass: Two dimensional Numpy array of floats representing the probabil-
+        ities given each possible class.
+
+    Returns:
+       fclass: One dimensional Numpy array containing the computed classifiica-
+        tions using the argmax of the probabilities in the aclass array.
+
+    Raises:
+        None
+    """
     fclass = np.zeros((aclass.shape[0]))
     for i in range(aclass.shape[0]):
         if aclass[i, 0] > aclass[i, 1]:
@@ -52,19 +88,23 @@ def classify(aclass):
     return fclass
 
 
-def compacc(test, fclass):
-    match = 0
-    for i in range(fclass.size - 1):
-        if fclass[i] == test[i, NFEATURES]:
-            match += 1
-
-    accuracy = match / fclass.size
-
-    return accuracy
-
-
-
 def example():
+    """Main entry point for running naive Bayes' model on the simple example
+     from the course slides.
+
+    Calls functions used to create and initialize train and test data, create
+     probablistic model from train data, run naive Bayesian model on test data,
+      and output/compute confusion matrix, accuracy, precision and accuracy.
+
+    Params:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     extrain = np.array([[3.0, 5.1, 1.0],
                        [4.1, 6.3, 1.0],
                        [7.2, 9.8, 1.0],
@@ -96,18 +136,24 @@ def example():
         print("Example class = 0")
 
 
-def getconfmat(ntlabels, ys, fname):
-    """Computes and outputs the classification confusion matrix.
-    Performs the calculations needed to output a csv format confusion matrix containing the values representing the
-    ratio of predicted and output classifications.
+def getconfmat(labels, ys, fname):
+    """Computes, outputs and returns the classification confusion matrix.
+
+    Performs the calculations needed to output a csv format confusion matrix
+     containing the values representing the ratio of predicted and output class-
+     ifications.
+
 
     Arguments:
-        ntlabels: An array of integer values containing the labels/target classifications for each data set.
-        ys: An array of integer values containing the predicted classification for each data set.
+        labels: An array of integer values containing the labels/target classif-
+         ications for each data set.
+        ys: An array of integer values containing the predicted classification
+         for each data set.
         fname: String used to save the csv file to.
 
     Returns:
-        None
+        confmat: An 2x2 NumPy matrix containing the confusion matrix for the
+         classifications.
 
     Raises:
         None
@@ -115,8 +161,8 @@ def getconfmat(ntlabels, ys, fname):
 
     # Confusion matrix
     confmat = np.zeros((2, 2))
-    for i in range(ntlabels.size):
-        l = int(ntlabels[i])
+    for i in range(labels.size):
+        l = int(labels[i])
         y = int(ys[i])
         confmat[l, y] += 1
 
@@ -127,6 +173,23 @@ def getconfmat(ntlabels, ys, fname):
 
 
 def initData(infile):
+    """Initializes the train and test data.
+
+    Uses the passed in filename to open and split up and return the UCI Spambase
+     data files into a train and test set.
+
+    Params:
+        infile: A string representing the filename of the UCI Spambase data.
+
+    Return:
+        test: A NumPy array containing float values representing the examples
+         and features of the test data set.
+        train: A NumPy array containing float values representing the examples
+         and features of the train data set.
+
+    Raises:
+        None
+    """
     data = np.loadtxt(infile, delimiter=',')
     spam = data[:1813]
     nspam = data[1813:]
@@ -139,6 +202,27 @@ def initData(infile):
 
 
 def nblm(test, p, μ, σ):
+    """Runs Naive Bayes Learning Algorithm on the test data.
+
+    Uses p, μ and σ to perform the Naive Bayesian Learning algorithm on the test
+     data to calculate the probability of each feature given each class.
+
+    Params:
+        test: A NumPy array containing float values representing the examples
+         and features of the train data set.
+        p: Tuple of floats representing the probabilities of each class.
+        μ: A NumPy matrix of floats representing the mean for each feature given
+         each class.
+        σ: A NumPy matrix of floats  representing the standard deviation for
+         each features given each class.
+
+    Returns:
+        aclass: Two dimensional Numpy array of floats representing the probabil-
+         ities given each possible class.
+
+    Raises:
+        None
+    """
     tclass = np.zeros((test.shape[0], NFEATURES, 2))
     aclass = np.ones((test.shape[0], 2))
     aclass[:, 0] *= math.log2(p[0])
@@ -155,7 +239,27 @@ def nblm(test, p, μ, σ):
 
 
 def ndist(x, μ, σ):
-    n = (1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) / (2 * pow(σ, 2))))
+    """Computes the probability using the Gaussian distribution.
+
+    Uses x, μ and σ to compute the probability using the Gaussian naive Bayesian
+     algorithm.
+
+    Params:
+        x: A float representing the current feature of the current example used
+         to calculate the probability.
+        μ: A NumPy matrix of floats representing the mean for each feature given
+         each class.
+        σ: A NumPy matrix of floats  representing the standard deviation for
+         each features given each class.
+
+    Returns:
+        n: Float representing the result of the Gaussian distribution function,
+         or 0.00000001 if n is less than.
+    Raises:
+        None
+    """
+    n = (1 / (math.sqrt(2 * math.pi) * σ)) * (math.exp(-1 * pow(x - μ, 2) /
+                                                       (2 * pow(σ, 2))))
 
     if n == 0:
         return 0.0000001
@@ -164,6 +268,24 @@ def ndist(x, μ, σ):
 
 
 def probmodel(train):
+    """Creates a probabilistic model for the train data.
+
+    Builds and returns a probabilistic model using the passed in train data
+
+    Params:
+        train: A NumPy array containing float values representing the examples
+         and features of the train data set.
+
+    Return:
+        p: Tuple of floats representing the probabilities of each class.
+        μ: A NumPy matrix of floats representing the mean for each feature given
+         each class.
+        σ: A NumPy matrix of floats  representing the standar deviation for each
+         features given each class.
+
+    Raises:
+        None
+    """
     p = [0, 0]
 
     class1 = np.sum(train[:, NFEATURES], axis=0, dtype=np.float64)
