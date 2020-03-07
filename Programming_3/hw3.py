@@ -1,8 +1,10 @@
 import copy
-
-import numpy as np
-import matplotlib.pyplot as plt
 import math
+import matplotlib.pyplot as plt
+import numpy as np
+import sys
+
+MINDELTA = 0.0001
 
 def main():
     print("Welcome to Homework 3")
@@ -13,48 +15,42 @@ def main():
     fig, ax = plt.subplots()
 #    plot(data, 'dplot.png')
 
-    k = 3
-    r = 1
+    k = int(sys.argv[1])
+    r = int(sys.argv[2])
 
-    kmeans(data, k, r)
+    ms = list(range(r))
+    sse = np.zeros((r))
+    for i in range(r):
+        ms[i], sse[i] = kmeans(data, k)
+
+    lsse = np.argmin(sse)
+    print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
+    plot(ms[lsse], 'mplot.png')
+
+    return 0
 
 
 def assignment(x, m, k, S):
-    #    return 0
     for p in range(x.shape[0]):
         t = np.zeros((k))
         for i in range(k):
-            #        S[i] = assignment(x, m[i], k)
             t[i] = twonorm(x[p], m[i])
-#                np.append(S[i], assignment(x[p], m[i], k))
         s = np.argmin(t)
- #            np.append(S[3], (x[p, 0], x[p, 1]), axis=1)
         xs = (x[p, 0], x[p, 1])
- #            S = np.append(S, xs )
         S[s].append(xs)
 
     return S
 
 
-def kmeans(x, k, r):
-    print('kmeans()')
+def kmeans(x, k):
     # 1. Select K points as initial centroids
     idx = np.random.choice(x.shape[0], size=k)
     m = x[idx, :]
-
-#    S = np.empty([k, 1], dtype=tuple)
-#    S = []
-#    for i in range(k):
-#        t = [(m[i, 0], m[i, 1])]
-#        S[i, 0] = t
-#        S.append(t)
 
     # 2. repeat until Centroid do not change:
     ml = np.zeros((k))
     it = 0
     while True:
-        print(it)
-        it += 1
         # Form K clusters by assigning each point to its closest centroid
         S = []
         for i in range(k):
@@ -64,18 +60,16 @@ def kmeans(x, k, r):
 
         # Recompute the centroid of each cluster
         m = update(m, S)
-        print()
 
         if np.any(ml != 0.0):
             t = m - ml
             if max(t.max(), t.min(), key=abs) < 0.001:
-                plot(m, 'mplot')
-                return 0
+                break
         ml = copy.deepcopy(m)
-        print()
 
-    print()
-    return 0
+    sse = sumofsquares(m)
+
+    return m, sse
 
 
 def plot(x, fname):
@@ -84,12 +78,22 @@ def plot(x, fname):
     plt.savefig(fname)
 
 
+def sumofsquares(m):
+   mu = np.sum(m)
+   dev = m - mu
+   dev *= dev
+   sse = np.sum(dev)
+
+   return sse
+
+
 def twonorm(x, m):
     sum = 0
     for i in range(x.size):
         sum += pow(x[i] - m[i], 2)
 
-    return math.sqrt(sum)
+#    return math.sqrt(sum) # 2 norm squared
+    return sum
 
 
 def update(m, S):
