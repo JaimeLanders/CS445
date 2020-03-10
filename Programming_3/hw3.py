@@ -12,20 +12,21 @@ def main():
 
     data = np.loadtxt(infile)
 
-    fig, ax = plt.subplots()
+#    fig, ax = plt.subplots()
 #    plot(data, 'dplot.png')
 
     k = int(sys.argv[1])
     r = int(sys.argv[2])
 
     ms = list(range(r))
+    S = list(range(r))
     sse = np.zeros((r))
     for i in range(r):
-        ms[i], sse[i] = kmeans(data, k)
+        ms[i], S[i], sse[i] = kmeans(data, k)
 
     lsse = np.argmin(sse)
     print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
-    plot(ms[lsse], 'mplot.png')
+    plot(S[lsse], ms[lsse], 'mplot.png')
 
     return 0
 
@@ -50,6 +51,7 @@ def kmeans(x, k):
     # 2. repeat until Centroid do not change:
     ml = np.zeros((k))
     it = 0
+    S = []
     while True:
         # Form K clusters by assigning each point to its closest centroid
         S = []
@@ -67,24 +69,33 @@ def kmeans(x, k):
                 break
         ml = copy.deepcopy(m)
 
-    sse = sumofsquares(m)
+    sse = sumofsquares(S)
 
-    return m, sse
+    return m, S, sse
 
 
-def plot(x, fname):
+def plot(S, m, fname):
+
     fig, ax = plt.subplots()
-    plt.scatter(x[:, 0], x[:, 1])
+    for i in range(len(S)):
+        for j in range(len(S[i])):
+            Six, Siy = zip(*S[i])
+        plt.scatter(Six, Siy)
+    plt.scatter(m[:, 0], m[:, 1], marker='+')
     plt.savefig(fname)
 
 
-def sumofsquares(m):
-   mu = np.sum(m)
-   dev = m - mu
-   dev *= dev
-   sse = np.sum(dev)
+def sumofsquares(S):
+    sse = 0
+    sumx = 0
+    sumy = 0
+    for i in range(len(S)):
+        for j in range(1, len(S[i])):
+            sumx += pow(S[i][j][0] - S[i][0][0], 2)
+            sumy += pow(S[i][j][1] - S[i][0][1], 2)
 
-   return sse
+    sse = sumx + sumy
+    return sse
 
 
 def twonorm(x, m):
@@ -92,14 +103,13 @@ def twonorm(x, m):
     for i in range(x.size):
         sum += pow(x[i] - m[i], 2)
 
-#    return math.sqrt(sum) # 2 norm squared
     return sum
 
 
 def update(m, S):
     for i in range(m.shape[0]):
         sum = [0, 0]
-        for j in range(len(S[i])):
+        for j in range(1, len(S[i])):
             sum[0] += S[i][j][0]
             sum[1] += S[i][j][1]
         t =  (sum[0] / len(S[i]), sum[1] / len(S[i]))
