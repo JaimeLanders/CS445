@@ -15,18 +15,26 @@ def main():
 #    fig, ax = plt.subplots()
 #    plot(data, 'dplot.png')
 
-    k = int(sys.argv[1])
-    r = int(sys.argv[2])
+    mode = int(sys.argv[1])
 
-    ms = list(range(r))
-    S = list(range(r))
-    sse = np.zeros((r))
-    for i in range(r):
-        ms[i], S[i], sse[i] = kmeans(data, k)
+    if mode == 1:
+        k = int(sys.argv[2])
+        r = int(sys.argv[3])
 
-    lsse = np.argmin(sse)
-    print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
-    plot(S[lsse], ms[lsse], 'mplot.png')
+        ms = list(range(r))
+        S = list(range(r))
+        sse = np.zeros((r))
+        for i in range(r):
+            ms[i], S[i], sse[i] = kmeans(data, k)
+
+        lsse = np.argmin(sse)
+        print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
+        plot(S[lsse], ms[lsse], 'mplot.png')
+    elif mode == 2:
+        cmeans(data)
+    else:
+        print('Usage: python hw3 mode{1 = k-Means, 2 = FCM} K/c r')
+        return -1
 
     return 0
 
@@ -41,6 +49,57 @@ def assignment(x, m, k, S):
         S[s].append(xs)
 
     return S
+
+
+def cmeans(x):
+    m = 0
+    x = np.array([[1, 2], [0, -1]])
+    w = np.array([[0.4, 0.6], [0.7, 0.3]])
+
+    # Choose a number of clusters: c (a hyperparameter).
+#    c = sys.argv[2]
+
+    # Initially assign coefficients randomly to each data point for being in the
+    # clusters (these are the initial membership grades).
+
+    # Repeat until the algorithm has converged/stopping condition:
+    while True:
+        # (I) Compute the centroid for each cluster (m-step).
+        c = cmstep(x, w, m)
+
+        # (II) For each data point, compute its coefficients/membership grades
+        # for being in the clusters (e-step).
+        w = cestep(x, w, m, c)
+
+        break # temp
+
+    print()
+    return 0
+
+
+def cestep(x, w, m, c):
+    for i in range(w.shape[0]):
+        for j in range(w.shape[1]):
+            sum = 0
+            for k in range(c.size):
+                sum += 1 / (pow(twonorm(x[i], c[j], 1), (2/(m - 1))) /
+                            pow(twonorm(x[i], c[j], 1), (2/(m - 1))))
+            w[i, j] = sum
+    return w
+
+
+def cmstep(x, w, m):
+    c = np.zeros((2, 2))
+    for k in range(c.shape[0]):
+        numsum = 0
+        densum = 0
+        for i in range(x.shape[0]):
+            numsum += w[i, k] * (x[i] ** m) * x[i]
+            densum += w[i, k] * (x[i] ** m)
+            print()
+        c[k] = numsum/densum
+
+    return c
 
 
 def kmeans(x, k):
@@ -75,7 +134,6 @@ def kmeans(x, k):
 
 
 def plot(S, m, fname):
-
     fig, ax = plt.subplots()
     for i in range(len(S)):
         for j in range(len(S[i])):
@@ -98,12 +156,14 @@ def sumofsquares(S):
     return sse
 
 
-def twonorm(x, m):
+def twonorm(x, m, d):
     sum = 0
     for i in range(x.size):
         sum += pow(x[i] - m[i], 2)
-
-    return sum
+    if d == 1:
+        return math.sqrt(sum)
+    else:
+        return sum
 
 
 def update(m, S):
