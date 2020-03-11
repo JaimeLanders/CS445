@@ -82,10 +82,10 @@ def cestep(x, w, m, c):
         for j in range(w.shape[1]):
             sum = 0
             for k in range(c.shape[0]):
-                sum += 1 / pow(twonorm(x[i], c[j], 1) /
+                sum += pow(twonorm(x[i], c[j], 1) /
                                (twonorm(x[i], c[k], 1)), (2 / (m - 1)))
 
-            w[i, j] = sum
+            w[i, j] = 1 / sum
     return w
 
 
