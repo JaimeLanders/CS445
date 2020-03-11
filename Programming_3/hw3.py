@@ -62,11 +62,13 @@ def cestep(X, W, m, C):
 
 def cmeans(X, c, m):
     # D2L example
+#    c = 2
 #    m = 2
-#    x = np.array([[1, 2], [0, -1]])
-#    w = np.array([[0.4, 0.6], [0.7, 0.3]])
-#    c = cmstep(x, w, m)
-#    w = cestep(x, w, m, c)
+#    X = np.array([[1, 2], [0, -1]])
+#    W = np.array([[0.4, 0.6], [0.7, 0.3]])
+#    C = cmstep(X, W, m, c)
+#    W = cestep(X, W, m, C)
+#    return 0
 
     # Initially assign coefficients randomly to each data point for being in the
     # clusters (these are the initial membership grades).
@@ -77,7 +79,10 @@ def cmeans(X, c, m):
 
     cl = 0
     # Repeat until the algorithm has converged/stopping condition:
+    it = 0
     while True:
+        print(it)
+        it += 1
         # (I) Compute the centroid for each cluster (m-step).
         C = cmstep(X, W, m, c)
 
