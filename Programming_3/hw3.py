@@ -52,7 +52,7 @@ def assignment(x, m, k, S):
 
 
 def cmeans(x):
-    m = 0
+    m = 2
     x = np.array([[1, 2], [0, -1]])
     w = np.array([[0.4, 0.6], [0.7, 0.3]])
 
@@ -81,9 +81,10 @@ def cestep(x, w, m, c):
     for i in range(w.shape[0]):
         for j in range(w.shape[1]):
             sum = 0
-            for k in range(c.size):
-                sum += 1 / (pow(twonorm(x[i], c[j], 1), (2/(m - 1))) /
-                            pow(twonorm(x[i], c[j], 1), (2/(m - 1))))
+            for k in range(c.shape[0]):
+                sum += 1 / pow(twonorm(x[i], c[j], 1) /
+                               (twonorm(x[i], c[k], 1)), (2 / (m - 1)))
+
             w[i, j] = sum
     return w
 
@@ -94,8 +95,8 @@ def cmstep(x, w, m):
         numsum = 0
         densum = 0
         for i in range(x.shape[0]):
-            numsum += w[i, k] * (x[i] ** m) * x[i]
-            densum += w[i, k] * (x[i] ** m)
+            numsum += w[i, k] ** m * x[i]
+            densum += w[i, k] ** m
             print()
         c[k] = numsum/densum
 
