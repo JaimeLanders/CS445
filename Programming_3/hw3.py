@@ -6,8 +6,9 @@ import sys
 
 MINDELTA = 0.1
 
+
 def main():
-    print("Welcome to Homework 3")
+    print("Welcome to Homework 3\n")
     infile = 'cluster_dataset.txt'
 
     data = np.loadtxt(infile)
@@ -18,32 +19,39 @@ def main():
     mode = int(sys.argv[1])
 
     if mode == 1:
+        print("K-Means mode active")
         k = int(sys.argv[2])
         r = int(sys.argv[3])
+        print(f'''k: {k}, r: {r}\n''')
 
         M = list(range(r))
         S = list(range(r))
+
         sse = np.zeros((r))
         for i in range(r):
+            print(f'''Performing K-Means run {i + 1}''')
             M[i], S[i], sse[i] = kmeans(data, k)
 
         lsse = np.argmin(sse)
         print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
         kplot(S[lsse], M[lsse], 'kplot.png')
     elif mode == 2:
+        print("Fuzzy C-Means mode active")
         # Choose a number of clusters: c (a hyperparameter).
         c = int(sys.argv[2])
         m = int(sys.argv[3]) # Fuzzifier
         r = int(sys.argv[4])
+        print(f'''c: {c}, m: {m}, r: {r}\n''')
 
         W = list(range(r))
         C = list(range(r))
         sse = np.zeros((r))
         for i in range(r):
+            print(f'''Performing Fuzzy C-Means run {i + 1}''')
             W[i], C[i], sse[i] = cmeans(data, c, m)
 
         lsse = np.argmin(sse)
-        print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
+        print(f'''\nThe minimum SSE for the {r} runs is: {sse[lsse]}''')
         cplot(data, W[lsse], C[lsse], 'cplot.png')
     else:
         print('\nUsage: python hw3 mode hyperparam1 (hyperparam2) #runs, (i.e):'
@@ -81,7 +89,6 @@ def cmeans(X, c, m):
     W = np.zeros((X.shape[0], c))
     for i in range(W.shape[0]):
         for j in range(W.shape[1]):
-#            W[i, j] = np.random.randint(1, c)
             W[i, j] = np.random.uniform(1, c)
         W[i] = W[i] / np.sum(W[i])
 
@@ -89,12 +96,9 @@ def cmeans(X, c, m):
     cl = np.zeros((c))
 
     # Repeat until the algorithm has converged/stopping condition:
-#    it = 0 # temp
     sse = 0
     lsse = 0
     while True:
-#        print(it) # temp
-#        it += 1 # temp
         # (I) Compute the centroid for each cluster (m-step).
         C = cmstep(X, W, m, c)
 
@@ -151,10 +155,7 @@ def csse(X, W, C, m):
     for i in range(X.shape[0]):
         for j in range(C.shape[0]):
             sse += pow(W[i, j], m) * twonorm(X[i], C[j], 2)
-#            sumx += pow(S[i][j][0] - S[i][0][0], 2)
-#            sumy += pow(S[i][j][1] - S[i][0][1], 2)
 
-#    sse = sumx + sumy
     return sse
 
 
