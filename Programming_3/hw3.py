@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-MINDELTA = 0.0001
+MINDELTA = 0.1
 
 def main():
     print("Welcome to Homework 3")
@@ -72,17 +72,23 @@ def cmeans(X, c, m):
 
     # Initially assign coefficients randomly to each data point for being in the
     # clusters (these are the initial membership grades).
-#    W = np.random.randint(1, X.shape[0], size = (X.shape[0], c))
-    W = np.random.randint(1, 10, size = (X.shape[0], c))
-    W = W / np.sum(W)
-    C = np.zeros((c, X.shape[1]))
+    W = np.zeros((X.shape[0], c))
+    for i in range(W.shape[0]):
+        for j in range(W.shape[1]):
+#            W[i, j] = np.random.randint(1, c)
+            W[i, j] = np.random.uniform(1, c)
+        W[i] = W[i] / np.sum(W[i])
 
-    cl = 0
+    C = np.zeros((c, X.shape[1])) # centroids
+    cl = np.zeros((c))
+
     # Repeat until the algorithm has converged/stopping condition:
-    it = 0
+    it = 0 # temp
+    sse = 0
+    lsse = 0
     while True:
-        print(it)
-        it += 1
+        print(it) # temp
+        it += 1 # temp
         # (I) Compute the centroid for each cluster (m-step).
         C = cmstep(X, W, m, c)
 
@@ -90,11 +96,16 @@ def cmeans(X, c, m):
         # for being in the clusters (e-step).
         W = cestep(X, W, m, C)
 
-        if np.any(cl != 0.0):
-            t = C - cl
-            if max(t.max(), t.min(), key=abs) < MINDELTA:
-                break
-        cl = copy.deepcopy(C)
+#        if np.any(cl != 0.0):
+#            t = C - cl
+#            if max(t.max(), t.min(), key=abs) < MINDELTA:
+#            if max(t.max(), t.min(), key=abs) <= 0:
+#                    break
+#        cl = copy.deepcopy(C)
+        sse = csse(X, W, C, m)
+        if lsse != 0 and lsse - sse < MINDELTA:
+            break
+        lsse = sse
 
     return W, C
 
@@ -105,8 +116,8 @@ def cmstep(X, W, m, c):
         numsum = 0
         densum = 0
         for i in range(X.shape[0]):
-            numsum += W[i, k] ** m * X[i]
-            densum += W[i, k] ** m
+            numsum += pow(W[i, k], m) * X[i]
+            densum += pow(W[i, k], m)
         C[k] = numsum/densum
 
     return C
@@ -123,18 +134,32 @@ def cplot(X, W, C, fname):
 #        for j in range(W.shape[0]):
         xc = np.argmax(W[i])
         xs = (X[i, 0], X[i, 1])
-#        if clusters[xc] == 0:
-#           clusters[xc][0] = xs[0]
-#           clusters[xc][1] = xs[1]
-#        else:
-        clusters[xc].append(xs)
+        if clusters[xc] == (0, 0):
+           clusters[xc][0] = xs[0]
+           clusters[xc][1] = xs[1]
+        else:
+            clusters[xc].append(xs)
 
     for i in range(len(clusters)):
         Xix, Xiy = zip(*clusters[i])
         plt.scatter(Xix, Xiy)
 
-    plt.scatter(C[:, 0], C[:, 1], marker='+') # Centroids
+    plt.scatter(C[:, 0], C[:, 1], marker='+') # Centroids   [
     plt.savefig(fname)
+
+
+def csse(X, W, C, m):
+    sse = 0
+    sumx = 0
+    sumy = 0
+    for i in range(X.shape[0]):
+        for j in range(C.shape[0]):
+            sse += pow(W[i, j], m) * twonorm(X[i], C[j], 2)
+#            sumx += pow(S[i][j][0] - S[i][0][0], 2)
+#            sumy += pow(S[i][j][1] - S[i][0][1], 2)
+
+#    sse = sumx + sumy
+    return sse
 
 
 def kestep(m, S):
@@ -174,7 +199,7 @@ def kmeans(x, k):
                 break
         ml = copy.deepcopy(m)
 
-    sse = sumofsquares(S)
+    sse = ksse(S)
 
     return m, S, sse
 
@@ -201,7 +226,7 @@ def kplot(S, m, fname):
     plt.savefig(fname)
 
 
-def sumofsquares(S):
+def ksse(S):
     sse = 0
     sumx = 0
     sumy = 0
