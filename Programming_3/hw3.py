@@ -8,6 +8,25 @@ MINDELTA = 0.1
 
 
 def main():
+    """Main entry point for the program, executes either k-Means or Fuzzy
+        C-Means algorithms
+
+    Uses command line arguments to determine mode (1 = k-Means, 2 = FCM) and
+     hyper-parameters used to tune respective algorithm, executes the correct
+     algorithm using parameters and creates a plot of the iteration over r
+     runs with the lowest sum of squares error (sse).
+
+    Params:
+        None
+
+    Returns:
+        0 if successful
+        -1 if unsuccessful due to incorrect initialization
+
+    Raises:
+        None
+
+    """
     print("Welcome to Homework 3\n")
     infile = 'cluster_dataset.txt'
 
@@ -33,7 +52,7 @@ def main():
             M[i], S[i], sse[i] = kmeans(data, k)
 
         lsse = np.argmin(sse)
-        print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
+        print(f'''\nThe minimum SSE for the {r} runs is: {sse[lsse]}''')
         kplot(S[lsse], M[lsse], 'kplot.png')
     elif mode == 2:
         print("Fuzzy C-Means mode active")
@@ -63,6 +82,27 @@ def main():
 
 
 def cestep(X, W, m, C):
+    """Performs the E-Step of the CFM algorithm
+
+    Uses the parameters to calculate the new membership grades (W) of the E-step
+     for the FCM algorithm.
+
+    Params:
+        X: NumPy array of float values representing the data points
+        W: NumPy array of float values representing the coefficients/membership
+            grades for each data point to each cluster before E-step
+        m: Integer representing the Fuzzifier hyper-parameter
+        C: NumPy array of float values representing the centroids for each
+            cluster
+
+    Returns:
+        W: NumPy array of float values representing the coefficients/membership
+            grades for each data point to each cluster after E-step
+
+    Raises:
+        None
+
+    """
     for i in range(W.shape[0]):
         for j in range(W.shape[1]):
             sum = 0
@@ -75,6 +115,29 @@ def cestep(X, W, m, C):
 
 
 def cmeans(X, c, m):
+    """Executes the Fuzzy C-Means algorithm
+
+    Uses the parameters to execute the Fuzzy C-Means algorithm and returns the
+     membership grades (W), clusters (C) and sum of squares error (sse).
+
+    Params:
+        X: NumPy array of float values representing the data points
+            grades for each data point to each cluster before E-step
+        c: Integer representing the c hyper-parameter for the number of clusters
+        m: Integer representing the Fuzzifier hyper-parameter
+
+    Returns:
+        W: NumPy array of float values representing the coefficients/membership
+            grades for each data point to each cluster
+        C: NumPy array of float values representing the centroids for each
+            cluster
+        sse: Float representing the sum of squares error for the current run of
+              the FCM algorithm
+
+    Raises:
+        None
+
+    """
     # D2L example
 #    c = 2
 #    m = 2
@@ -115,6 +178,28 @@ def cmeans(X, c, m):
 
 
 def cmstep(X, W, m, c):
+    """Performs the M-Step of the CFM algorithm
+
+    Uses the parameters to calculate the new centroids (C) of the M-step for
+     the FCM algorithm.
+
+    Params:
+        X: NumPy array of float values representing the data points
+        W: NumPy array of float values representing the coefficients/membership
+            grades for each data point to each cluster before M-step
+        m: Integer representing the Fuzzifier hyper-parameter
+        c: Integer representing the c hyper-parameter for the number of clusters
+        C: NumPy array of float values representing the centroids for each
+            cluster before the M-step
+
+    Returns:
+        C: NumPy array of float values representing the centroids for each
+            cluster after the M-step
+
+    Raises:
+        None
+
+    """
     C = np.zeros((c, X.shape[1]))
     for k in range(C.shape[0]):
         numsum = 0
@@ -128,6 +213,26 @@ def cmstep(X, W, m, c):
 
 
 def cplot(X, W, C, fname):
+    """Plots the data points and outputs to a file for the FCM algorithm
+
+    Uses the data (X), membership grades (W) and Clusters (C) to create a plot
+     for results of the FCM algorithm.
+
+    Params:
+        X: NumPy array of float values representing the data points
+        W: NumPy array of float values representing the coefficients/membership
+            grades for each data point to each cluster
+        C: NumPy array of float values representing the centroids for each
+            cluster
+        fname: String representing the filename of the plot to output to
+
+    Returns:
+        None
+
+    Raises:
+        None
+
+    """
     fig, ax = plt.subplots()
 
     clusters = []
@@ -144,11 +249,32 @@ def cplot(X, W, C, fname):
         Xix, Xiy = zip(*clusters[i])
         plt.scatter(Xix, Xiy)
 
-    plt.scatter(C[:, 0], C[:, 1], marker='+') # Centroids   [
+    plt.scatter(C[:, 0], C[:, 1], marker='+') # Centroids
     plt.savefig(fname)
 
 
 def csse(X, W, C, m):
+    """Calculates and retunrs the sum of squares error for Fuzzy C-Means
+
+    Takes the data (X), membership grades (W), centroids (C) and Fuzzifier (m)
+     to calculate the sum of squares error for the FCM algorithm.
+
+    Params:
+        X: NumPy array of float values representing the data points
+        W: NumPy array of float values representing the coefficients/membership
+            grades for each data point to each cluster
+        C: NumPy array of float values representing the centroids for each
+            cluster
+        m: Integer representing the Fuzzifier hyper-parameter
+
+    Returns:
+        sse: Float representing the sum of squares error for the current run of
+              the FCM algorithm
+
+    Raises:
+        None
+
+    """
     sse = 0
     sumx = 0
     sumy = 0
@@ -159,71 +285,173 @@ def csse(X, W, C, m):
     return sse
 
 
-def kestep(m, S):
-    for i in range(m.shape[0]):
+def kestep(M, S):
+    """Performs the E-Step of the k-Means algorithm
+
+    Uses the parameters to calculate the new centroids/means (M) of the E-step
+     for the k-Means algorithm.
+
+    Params:
+        M: NumPy array of integers representing the means/centroids for the
+         k-Means algorithm before the E-step
+        S: NumPy array of float values representing the set of clusters and
+         their respective data points
+
+    Returns:
+        M: NumPy array of integers representing the means/centroids for the
+         k-Means algorithm after the E-step
+
+    Raises:
+        None
+
+    """
+    for i in range(M.shape[0]):
         sum = [0, 0]
         for j in range(1, len(S[i])):
             sum[0] += S[i][j][0]
             sum[1] += S[i][j][1]
         t =  (sum[0] / len(S[i]), sum[1] / len(S[i]))
-        m[i] = t
-    return m
+        M[i] = t
+    return M
 
 
-def kmeans(x, k):
+def kmeans(X, k):
+    """Executes the k-Means algorithm
+
+    Uses the parameters to execute the k-Means algorithm and returns the means
+    (M), set of clusters and data points (S) and the sum of squares error (SSE).
+
+    Params:
+        X: NumPy array of float values representing the data points
+        k: Integer representing the k hyper-parameter for the number of clusters
+         in the k-Means algorithm
+
+    Returns:
+        M: NumPy array of integers representing the means/centroids for the
+         k-Means algorithm
+        S: NumPy array of float values representing the set of clusters and
+         their respective data points
+        sse: Float representing the sum of squares error for the current run of
+         the k-Means algorithm
+
+    Raises:
+        None
+
+    """
     # 1. Select K points as initial centroids
-    idx = np.random.choice(x.shape[0], size=k)
-    m = x[idx, :]
+    idx = np.random.choice(X.shape[0], size=k)
+    M = X[idx, :]
 
     # 2. repeat until Centroid do not change:
     ml = np.zeros((k))
-    it = 0
     S = []
     while True:
         # Form K clusters by assigning each point to its closest centroid
         S = []
         for i in range(k):
-            t = [(m[i, 0], m[i, 1])]
+            t = [(M[i, 0], M[i, 1])]
             S.append(t)
-        S = kmstep(x, m, k, S)
+        S = kmstep(X, M, k, S)
 
         # Recompute the centroid of each cluster
-        m = kestep(m, S)
+        M = kestep(M, S)
 
         if np.any(ml != 0.0):
-            t = m - ml
+            t = M - ml
             if max(t.max(), t.min(), key=abs) < MINDELTA:
                 break
-        ml = copy.deepcopy(m)
+        ml = copy.deepcopy(M)
 
     sse = ksse(S)
 
-    return m, S, sse
+    return M, S, sse
 
 
-def kmstep (x, m, k, S):
-    for p in range(x.shape[0]):
+def kmstep (X, M, k, S):
+    """Performs the M-Step of the k-Means algorithm
+
+    Uses the parameters to calculate the new set of clusters and their data
+     points of the M-step for the k-Means algorithm.
+
+    Params:
+        X: NumPy array of float values representing the data points
+        M: NumPy array of integers representing the means/centroids for the
+         k-Means algorithm
+        k: Integer representing the k hyper-parameter for the number of clusters
+         in the k-Means algorithm
+        S: NumPy array of float values representing the set of clusters and
+         their respective data points before the M-step
+
+    Returns:
+        S: NumPy array of float values representing the set of clusters and
+         their respective data points after the M-step
+
+    Raises:
+        None
+
+    """
+    for p in range(X.shape[0]):
         t = np.zeros((k))
         for i in range(k):
-            t[i] = twonorm(x[p], m[i])
+            t[i] = twonorm(X[p], M[i], 2)
         s = np.argmin(t)
-        xs = (x[p, 0], x[p, 1])
+        xs = (X[p, 0], X[p, 1])
         S[s].append(xs)
 
     return S
 
 
-def kplot(S, m, fname):
+def kplot(S, M, fname):
+    """Plots the data points and outputs to a file
+
+    Uses the clusters and their data points (S) and the set of centroids/means
+    (M) to create a plot for results of the k-Means algorithm.
+
+    Params:
+        S: NumPy array of float values representing the set of clusters and
+         their respective data points
+        M: NumPy array of integers representing the means/centroids for the
+         k-Means algorithm
+        fname: String representing the filename of the plot to output to
+
+    Returns:
+        None
+
+    Raises:
+        None
+
+    """
     fig, ax = plt.subplots()
     for i in range(len(S)):
         for j in range(len(S[i])):
             Six, Siy = zip(*S[i])
         plt.scatter(Six, Siy)
-    plt.scatter(m[:, 0], m[:, 1], marker='+')
+    plt.scatter(M[:, 0], M[:, 1], marker='+')
     plt.savefig(fname)
 
 
 def ksse(S):
+    """Calculates and returns the sum of squares error for k-Means
+
+    Uses the set of clusters and their respective datapoints to calculate the
+     sum of squares error for the k-Means algorithm.
+
+    Params:
+        X: NumPy array of float values representing the data points
+        W: NumPy array of float values representing the coefficients/membership
+            grades for each data point to each cluster
+        C: NumPy array of float values representing the centroids for each
+            cluster
+        m: Integer representing the Fuzzifier hyper-parameter
+
+    Returns:
+        sse: Float representing the sum of squares error for the current run of
+              the k-Means algorithm
+
+    Raises:
+        None
+
+    """
     sse = 0
     sumx = 0
     sumy = 0
@@ -236,10 +464,30 @@ def ksse(S):
     return sse
 
 
-def twonorm(x, m, p):
+def twonorm(X, M, p):
+    """Calculates the L2 norm
+
+    Uses the data points (X) and the centroid/means (M) to calculate the L2 norm
+     to the pth power.
+
+    Params:
+        X: NumPy array of float values representing the data points
+        M: NumPy array of integers representing the means/centroids for the
+         k-Means/FCM algorithm
+        p: Integer representing the power to raise the L2 norm to; if 1 then a
+            square root is performed on the sum before returning, if 2 then just
+            the sum is returned
+
+    Returns:
+        sum: Float representing the result of the L2 norm calculation
+
+    Raises:
+        None
+
+    """
     sum = 0
-    for i in range(x.size):
-        sum += pow(x[i] - m[i], 2)
+    for i in range(X.size):
+        sum += pow(X[i] - M[i], 2)
     if p == 1:
         return math.sqrt(sum)
     else:
