@@ -21,24 +21,30 @@ def main():
         k = int(sys.argv[2])
         r = int(sys.argv[3])
 
-        Ms = list(range(r))
+        M = list(range(r))
         S = list(range(r))
         sse = np.zeros((r))
         for i in range(r):
-            Ms[i], S[i], sse[i] = kmeans(data, k)
+            M[i], S[i], sse[i] = kmeans(data, k)
 
         lsse = np.argmin(sse)
         print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
-        kplot(S[lsse], Ms[lsse], 'kplot.png')
+        kplot(S[lsse], M[lsse], 'kplot.png')
     elif mode == 2:
         # Choose a number of clusters: c (a hyperparameter).
         c = int(sys.argv[2])
         m = int(sys.argv[3]) # Fuzzifier
         r = int(sys.argv[4])
-#        for i in range(r):
-        W, C = cmeans(data, c, m)
-#        print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
-        cplot(data, W, C, 'cplot.png')
+
+        W = list(range(r))
+        C = list(range(r))
+        sse = np.zeros((r))
+        for i in range(r):
+            W[i], C[i], sse[i] = cmeans(data, c, m)
+
+        lsse = np.argmin(sse)
+        print(f'''The minimum SSE for the {r} runs is: {sse[lsse]}''')
+        cplot(data, W[lsse], C[lsse], 'cplot.png')
     else:
         print('\nUsage: python hw3 mode hyperparam1 (hyperparam2) #runs, (i.e):'
               '       \nk-Means mode (1): python hw3 1 K r'
@@ -83,12 +89,12 @@ def cmeans(X, c, m):
     cl = np.zeros((c))
 
     # Repeat until the algorithm has converged/stopping condition:
-    it = 0 # temp
+#    it = 0 # temp
     sse = 0
     lsse = 0
     while True:
-        print(it) # temp
-        it += 1 # temp
+#        print(it) # temp
+#        it += 1 # temp
         # (I) Compute the centroid for each cluster (m-step).
         C = cmstep(X, W, m, c)
 
@@ -96,18 +102,12 @@ def cmeans(X, c, m):
         # for being in the clusters (e-step).
         W = cestep(X, W, m, C)
 
-#        if np.any(cl != 0.0):
-#            t = C - cl
-#            if max(t.max(), t.min(), key=abs) < MINDELTA:
-#            if max(t.max(), t.min(), key=abs) <= 0:
-#                    break
-#        cl = copy.deepcopy(C)
         sse = csse(X, W, C, m)
         if lsse != 0 and lsse - sse < MINDELTA:
             break
         lsse = sse
 
-    return W, C
+    return W, C, sse
 
 
 def cmstep(X, W, m, c):
@@ -128,17 +128,13 @@ def cplot(X, W, C, fname):
 
     clusters = []
     for i in range(C.shape[0]):
-        clusters.append([(0, 0)])
+        cs = [(C[i][0].item(), C[i][1].item())]
+        clusters.append(cs)
 
     for i in range(X.shape[0]):
-#        for j in range(W.shape[0]):
         xc = np.argmax(W[i])
         xs = (X[i, 0], X[i, 1])
-        if clusters[xc] == (0, 0):
-           clusters[xc][0] = xs[0]
-           clusters[xc][1] = xs[1]
-        else:
-            clusters[xc].append(xs)
+        clusters[xc].append(xs)
 
     for i in range(len(clusters)):
         Xix, Xiy = zip(*clusters[i])
