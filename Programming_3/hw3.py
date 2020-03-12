@@ -53,12 +53,13 @@ def main():
 
         lsse = np.argmin(sse)
         print(f'''\nThe minimum SSE for the {r} runs is: {sse[lsse]}''')
-        kplot(S[lsse], M[lsse], 'kplot.png')
+        kplot(S[lsse], M[lsse], r, sse[lsse])
     elif mode == 2:
         print("Fuzzy C-Means mode active")
         # Choose a number of clusters: c (a hyperparameter).
         c = int(sys.argv[2])
-        m = int(sys.argv[3]) # Fuzzifier
+        m = int(sys.argv[3]) # Fuzzifier ints
+#        m = float(sys.argv[3]) # Fuzzifier floats
         r = int(sys.argv[4])
         print(f'''c: {c}, m: {m}, r: {r}\n''')
 
@@ -71,7 +72,7 @@ def main():
 
         lsse = np.argmin(sse)
         print(f'''\nThe minimum SSE for the {r} runs is: {sse[lsse]}''')
-        cplot(data, W[lsse], C[lsse], 'cplot.png')
+        cplot(data, W[lsse], C[lsse], r, m, sse[lsse])
     else:
         print('\nUsage: python hw3 mode hyperparam1 (hyperparam2) #runs, (i.e):'
               '       \nk-Means mode (1): python hw3 1 K r'
@@ -212,7 +213,7 @@ def cmstep(X, W, m, c):
     return C
 
 
-def cplot(X, W, C, fname):
+def cplot(X, W, C, r, m, sse):
     """Plots the data points and outputs to a file for the FCM algorithm
 
     Uses the data (X), membership grades (W) and Clusters (C) to create a plot
@@ -249,7 +250,14 @@ def cplot(X, W, C, fname):
         Xix, Xiy = zip(*clusters[i])
         plt.scatter(Xix, Xiy)
 
-    plt.scatter(C[:, 0], C[:, 1], marker='+') # Centroids
+    plt.scatter(C[:, 0], C[:, 1], marker='+', c='#000000', label='Centroids')
+
+    label = f'''Fuzzy C-Means (c: {C.shape[0]}, m: {m}, r: {r}) | SSE: {sse:.3f}'''
+    plt.title(f'''{label}''')
+    plt.xlabel('x1')
+    plt.ylabel('x2')
+    plt.legend(loc="lower right")
+    fname = f'''cplot-{C.shape[0]}-{m}-{r}.png'''
     plt.savefig(fname)
 
 
@@ -276,8 +284,6 @@ def csse(X, W, C, m):
 
     """
     sse = 0
-    sumx = 0
-    sumy = 0
     for i in range(X.shape[0]):
         for j in range(C.shape[0]):
             sse += pow(W[i, j], m) * twonorm(X[i], C[j], 2)
@@ -310,7 +316,7 @@ def kestep(M, S):
         for j in range(1, len(S[i])):
             sum[0] += S[i][j][0]
             sum[1] += S[i][j][1]
-        t =  (sum[0] / len(S[i]), sum[1] / len(S[i]))
+        t = (sum[0] / len(S[i]), sum[1] / len(S[i]))
         M[i] = t
     return M
 
@@ -344,6 +350,7 @@ def kmeans(X, k):
 
     # 2. repeat until Centroid do not change:
     ml = np.zeros((k))
+    lsse = 0
     S = []
     while True:
         # Form K clusters by assigning each point to its closest centroid
@@ -356,13 +363,10 @@ def kmeans(X, k):
         # Recompute the centroid of each cluster
         M = kestep(M, S)
 
-        if np.any(ml != 0.0):
-            t = M - ml
-            if max(t.max(), t.min(), key=abs) < MINDELTA:
-                break
-        ml = copy.deepcopy(M)
-
-    sse = ksse(S)
+        sse = ksse(S)
+        if lsse != 0 and lsse - sse < MINDELTA:
+            break
+        lsse = sse
 
     return M, S, sse
 
@@ -401,7 +405,7 @@ def kmstep (X, M, k, S):
     return S
 
 
-def kplot(S, M, fname):
+def kplot(S, M, r, sse):
     """Plots the data points and outputs to a file
 
     Uses the clusters and their data points (S) and the set of centroids/means
@@ -426,7 +430,15 @@ def kplot(S, M, fname):
         for j in range(len(S[i])):
             Six, Siy = zip(*S[i])
         plt.scatter(Six, Siy)
-    plt.scatter(M[:, 0], M[:, 1], marker='+')
+
+    plt.scatter(M[:, 0], M[:, 1], marker='+', c='#000000', label='Centroids')
+
+    label = f'''k-Means (k: {M.shape[0]}, r: {r}) | SSE: {sse:.3f}'''
+    plt.title(f'''{label}''')
+    plt.xlabel('x1')
+    plt.ylabel('x2')
+    plt.legend(loc="lower right")
+    fname = f'''kplot-{M.shape[0]}-{r}.png'''
     plt.savefig(fname)
 
 
